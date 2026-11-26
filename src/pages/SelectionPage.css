@@ -1,5 +1,5 @@
 .selection-page {
-  min-height: 100svh; width: 100%; position: relative; overflow: hidden;
+  height: 100%; min-height: 100svh; width: 100%; position: fixed; inset: 0; overflow: hidden; touch-action: pan-x;
   display: flex; align-items: center; justify-content: center;
   background: #080808; color: #f5f5f5; isolation: isolate;
 }
