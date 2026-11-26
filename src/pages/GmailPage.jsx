@@ -75,7 +75,9 @@ export default function GmailPage({ onBack }) {
     <main className="gmail-page">
       <div className="gmail-grain" aria-hidden="true" />
       <button className="gmail-back" type="button" onClick={onBack} aria-label="Kembali">
-        <span aria-hidden="true">←</span> Back
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19 12H5M12 19l-7-7 7-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </button>
 
       <section className="gmail-panel">
