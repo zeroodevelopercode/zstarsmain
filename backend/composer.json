@@ -1,0 +1,15 @@
+{
+  "name": "zeroodev/zstars-auth-api",
+  "description": "Zstars email OTP API",
+  "type": "project",
+  "require": {
+    "php": "^8.3",
+    "ext-pdo": "*",
+    "ext-pdo_pgsql": "*",
+    "phpmailer/phpmailer": "^7.0"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  }
+}
