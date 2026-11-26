@@ -61,7 +61,8 @@ function requestBody(): array {
     if ($length > 4096) respond(413, ['ok' => false, 'message' => 'Request terlalu besar.']);
     $type = strtolower(trim(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0]));
     if ($type !== 'application/json') respond(415, ['ok' => false, 'message' => 'Content-Type harus application/json.']);
-    $raw = file_get_contents('php://input');
+    $raw = file_get_contents('php://input', false, null, 0, 4097);
+    if (strlen($raw) > 4096) respond(413, ['ok' => false, 'message' => 'Request terlalu besar.']);
     $data = json_decode($raw ?: '', true);
     if (!is_array($data)) respond(400, ['ok' => false, 'message' => 'Format request tidak valid.']);
     return $data;
@@ -160,12 +161,17 @@ try {
             respond(422, ['ok' => false, 'message' => 'Masukkan alamat Gmail yang valid.']);
         }
 
-        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        // The hosting proxy appends the connecting client address to X-Forwarded-For.
+        $forwarded = array_filter(array_map('trim', explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '')));
+        $candidateIp = $forwarded ? end($forwarded) : ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+        $ip = filter_var($candidateIp, FILTER_VALIDATE_IP) ? $candidateIp : ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
         $ipHash = hash_hmac('sha256', $ip, $pepper);
 
         $pdo->beginTransaction();
         $lock = $pdo->prepare('SELECT pg_advisory_xact_lock(hashtext(:email))');
         $lock->execute(['email' => $email]);
+        $ipLock = $pdo->prepare('SELECT pg_advisory_xact_lock(hashtext(:ip))');
+        $ipLock->execute(['ip' => $ipHash]);
 
         $emailCount = $pdo->prepare("SELECT COUNT(*) FROM otp_requests WHERE email = :email AND created_at > NOW() - INTERVAL '1 hour'");
         $emailCount->execute(['email' => $email]);
@@ -197,6 +203,8 @@ try {
             respond(503, ['ok' => false, 'message' => 'Email belum bisa dikirim. Coba lagi nanti.']);
         }
 
+        $invalidateOld = $pdo->prepare('UPDATE otp_challenges SET consumed_at = NOW() WHERE email = :email AND consumed_at IS NULL');
+        $invalidateOld->execute(['email' => $email]);
         $insertChallenge = $pdo->prepare(
             'INSERT INTO otp_challenges (challenge_hash, email, otp_hash, expires_at) VALUES (:challenge, :email, :otp, NOW() + INTERVAL \'5 minutes\')'
         );
