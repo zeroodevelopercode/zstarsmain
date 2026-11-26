@@ -68,42 +68,82 @@ function requestBody(): array {
     return $data;
 }
 
+function gmailApiRequest(string $url, array $headers, ?string $body = null): array {
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_POST => $body !== null,
+        CURLOPT_POSTFIELDS => $body,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 20,
+    ]);
+    $response = curl_exec($ch);
+    $status = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+    if ($response === false || $status < 200 || $status >= 300) {
+        error_log('Zstars Gmail API request failed. HTTP ' . $status . ($curlError !== '' ? ' transport-error' : ''));
+        throw new RuntimeException('Email delivery is temporarily unavailable.');
+    }
+    $decoded = json_decode((string)$response, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
 function sendOtpEmail(string $email, string $otp): void {
-    $from = envValue('SMTP_FROM');
-    $password = envValue('SMTP_APP_PASSWORD');
-    if ($from !== 'zeroodevelopercode@gmail.com' || $password === '') {
-        throw new RuntimeException('Mail service is not configured.');
+    $clientId = envValue('GMAIL_CLIENT_ID');
+    $clientSecret = envValue('GMAIL_CLIENT_SECRET');
+    $refreshToken = envValue('GMAIL_REFRESH_TOKEN');
+    $from = 'zeroodevelopercode@gmail.com';
+    if ($clientId === '' || $clientSecret === '' || $refreshToken === '') {
+        throw new RuntimeException('Gmail API is not configured.');
     }
 
-    $mail = new PHPMailer(true);
-    $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
-    $mail->SMTPAuth = true;
-    $mail->Username = $from;
-    $mail->Password = $password;
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-    $mail->Port = 465;
-    $mail->Timeout = 12;
-    $mail->SMTPDebug = 0;
-    $mail->CharSet = 'UTF-8';
-    $mail->setFrom($from, 'Zstars');
-    $mail->addAddress($email);
-    $mail->isHTML(true);
-    $mail->Subject = 'Your Zstars verification code';
+    $token = gmailApiRequest('https://oauth2.googleapis.com/token', [
+        'Content-Type: application/x-www-form-urlencoded',
+        'Accept: application/json',
+    ], http_build_query([
+        'client_id' => $clientId,
+        'client_secret' => $clientSecret,
+        'refresh_token' => $refreshToken,
+        'grant_type' => 'refresh_token',
+    ], '', '&', PHP_QUERY_RFC3986));
+
+    $accessToken = (string)($token['access_token'] ?? '');
+    if ($accessToken === '') throw new RuntimeException('Gmail access token unavailable.');
+
     $safeOtp = htmlspecialchars($otp, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    $mail->Body = '<div style="font-family:Arial,sans-serif;background:#080808;color:#f5f5f5;padding:32px;border-radius:16px;max-width:480px;margin:auto">'
+    $html = '<div style="font-family:Arial,sans-serif;background:#080808;color:#f5f5f5;padding:32px;border-radius:16px;max-width:480px;margin:auto">'
         . '<p style="letter-spacing:3px;color:#999;font-size:11px">ZSTARS ACCOUNT</p>'
         . '<h1 style="font-size:24px;font-weight:500">Your verification code</h1>'
         . '<p style="color:#aaa">Use this one-time code to verify your email address.</p>'
         . '<div style="font-size:36px;letter-spacing:10px;font-weight:700;padding:20px 0">' . $safeOtp . '</div>'
         . '<p style="color:#999;font-size:12px">This code expires in 5 minutes. If you did not request it, you can ignore this email.</p>'
         . '</div>';
-    $mail->AltBody = "Your Zstars verification code is {$otp}. It expires in 5 minutes. If you did not request it, ignore this email.";
-    $mail->send();
+    $plain = "Your Zstars verification code is {$otp}. It expires in 5 minutes. If you did not request it, ignore this email.";
+    $boundary = 'zstars_' . bin2hex(random_bytes(12));
+    $subject = 'Your Zstars verification code';
+    $mime = "From: Zstars <{$from}>\r\n"
+        . "To: {$email}\r\n"
+        . "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n"
+        . "MIME-Version: 1.0\r\n"
+        . "Content-Type: multipart/alternative; boundary=\"{$boundary}\"\r\n\r\n"
+        . "--{$boundary}\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n"
+        . chunk_split(base64_encode($plain))
+        . "--{$boundary}\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n"
+        . chunk_split(base64_encode($html))
+        . "--{$boundary}--";
+    $raw = rtrim(strtr(base64_encode($mime), '+/', '-_'), '=');
+
+    gmailApiRequest('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', [
+        'Authorization: Bearer ' . $accessToken,
+        'Content-Type: application/json',
+        'Accept: application/json',
+    ], json_encode(['raw' => $raw], JSON_UNESCAPED_SLASHES));
 }
 
 function ensureConfig(): void {
-    foreach (['APP_ORIGIN', 'DATABASE_URL', 'OTP_PEPPER', 'SMTP_FROM', 'SMTP_APP_PASSWORD'] as $key) {
+    foreach (['APP_ORIGIN', 'DATABASE_URL', 'OTP_PEPPER', 'GMAIL_CLIENT_ID', 'GMAIL_CLIENT_SECRET', 'GMAIL_REFRESH_TOKEN'] as $key) {
         if (envValue($key) === '') throw new RuntimeException('Service configuration incomplete.');
     }
     if (strlen(envValue('OTP_PEPPER')) < 32) throw new RuntimeException('OTP secret is too short.');
