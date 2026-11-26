@@ -21,7 +21,7 @@ function GoogleIcon() {
   )
 }
 
-export default function SelectionPage() {
+export default function SelectionPage({ onGmail }) {
   const [notice, setNotice] = useState('')
 
   const chooseProvider = (provider) => {
@@ -39,7 +39,7 @@ export default function SelectionPage() {
 
       <section className="selection-bottom" aria-label="Choose sign in method">
         <div className="selection-actions">
-          <button className="provider-button provider-gmail" onClick={() => chooseProvider('Gmail')}>
+          <button className="provider-button provider-gmail" onClick={onGmail}>
             <GmailIcon />
             <span>Continue with Gmail</span>
             <span className="provider-arrow" aria-hidden="true">↗</span>
