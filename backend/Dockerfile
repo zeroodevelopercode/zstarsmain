@@ -19,7 +19,7 @@ RUN chmod +x /usr/local/bin/zstars-entrypoint \
     && chown -R www-data:www-data /var/www/html
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri 's!/var/www/html!\${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/000-default.conf /etc/apache2/apache2.conf
+RUN sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf /etc/apache2/apache2.conf \\\n    && printf '\\n<Directory /var/www/html/public>\\n    AllowOverride All\\n    Require all granted\\n</Directory>\\n' >> /etc/apache2/apache2.conf
 
 EXPOSE 8080
 ENTRYPOINT ["zstars-entrypoint"]
