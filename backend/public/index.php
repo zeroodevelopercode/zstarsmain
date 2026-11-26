@@ -150,10 +150,14 @@ function ensureConfig(): void {
 }
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$allowedOrigin = envValue('APP_ORIGIN');
+$allowedOrigins = array_values(array_filter(array_map(
+    static fn(string $value): string => rtrim(trim($value), '/'),
+    explode(',', envValue('APP_ORIGIN'))
+)));
+$originAllowed = $origin !== '' && in_array(rtrim($origin, '/'), $allowedOrigins, true);
 
-if ($allowedOrigin !== '' && hash_equals($allowedOrigin, $origin)) {
-    header('Access-Control-Allow-Origin: ' . $allowedOrigin);
+if ($originAllowed) {
+    header('Access-Control-Allow-Origin: ' . $origin);
     header('Vary: Origin');
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type');
@@ -161,7 +165,7 @@ if ($allowedOrigin !== '' && hash_equals($allowedOrigin, $origin)) {
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
-    if ($origin === '' || $allowedOrigin === '' || !hash_equals($allowedOrigin, $origin)) {
+    if (!$originAllowed) {
         respond(403, ['ok' => false, 'message' => 'Origin tidak diizinkan.']);
     }
     http_response_code(204);
