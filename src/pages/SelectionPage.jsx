@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './SelectionPage.css'
 
 function GmailIcon() {
@@ -21,12 +21,59 @@ function GoogleIcon() {
   )
 }
 
+function InstallIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3v11m0 0 4-4m-4 4-4-4M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export default function SelectionPage({ onGmail }) {
   const [notice, setNotice] = useState('')
+  const [installPrompt, setInstallPrompt] = useState(null)
+  const [isInstalled, setIsInstalled] = useState(false)
+
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+    setIsInstalled(standalone)
+
+    const handleBeforeInstall = (event) => {
+      event.preventDefault()
+      setInstallPrompt(event)
+    }
+    const handleInstalled = () => {
+      setIsInstalled(true)
+      setInstallPrompt(null)
+      setNotice('Zstars berhasil dipasang.')
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall)
+    window.addEventListener('appinstalled', handleInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
+      window.removeEventListener('appinstalled', handleInstalled)
+    }
+  }, [])
+
+  const showNotice = (message) => {
+    setNotice(message)
+    window.setTimeout(() => setNotice(''), 3200)
+  }
 
   const chooseProvider = (provider) => {
-    setNotice(provider + ' sign-in belum dihubungkan.')
-    window.setTimeout(() => setNotice(''), 2800)
+    showNotice(provider + ' sign-in belum dihubungkan.')
+  }
+
+  const installApp = async () => {
+    if (!installPrompt) {
+      showNotice('Buka menu browser (⋮), lalu pilih “Install app” atau “Add to Home screen”.')
+      return
+    }
+    installPrompt.prompt()
+    const choice = await installPrompt.userChoice
+    setInstallPrompt(null)
+    if (choice?.outcome === 'accepted') showNotice('Zstars sedang dipasang…')
   }
 
   return (
@@ -50,6 +97,12 @@ export default function SelectionPage({ onGmail }) {
             <span className="provider-arrow" aria-hidden="true">↗</span>
           </button>
         </div>
+        {!isInstalled && (
+          <button className="install-app-button" onClick={installApp}>
+            <InstallIcon />
+            <span>Install Zstars</span>
+          </button>
+        )}
         <p className="selection-note">Choose how you want to continue.</p>
       </section>
 
