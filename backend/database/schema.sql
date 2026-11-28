@@ -24,3 +24,19 @@ CREATE INDEX IF NOT EXISTS idx_otp_requests_email_created
 
 CREATE INDEX IF NOT EXISTS idx_otp_requests_ip_created
     ON otp_requests (ip_hash, created_at DESC);
+
+
+CREATE TABLE IF NOT EXISTS auth_sessions (
+    id BIGSERIAL PRIMARY KEY,
+    token_hash CHAR(64) NOT NULL UNIQUE,
+    email VARCHAR(254) NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_auth_sessions_email_created
+    ON auth_sessions (email, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_auth_sessions_expiry
+    ON auth_sessions (expires_at);
