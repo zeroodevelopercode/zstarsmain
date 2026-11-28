@@ -69,3 +69,16 @@
   .selection-center, .selection-bottom { animation: none; }
   .provider-button, .selection-notice { transition: none; }
 }
+
+.install-app-button {
+  width: 100%; min-height: 46px; margin-top: 11px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.055);
+  color: #e8e8e8; font: 600 12px 'DM Sans', sans-serif; letter-spacing: .02em;
+  cursor: pointer; transition: background .2s ease, border-color .2s ease, transform .2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.install-app-button svg { width: 17px; height: 17px; }
+.install-app-button:hover { background: rgba(255,255,255,.11); border-color: rgba(255,255,255,.42); }
+.install-app-button:active { transform: scale(.985); }
+.install-app-button:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
