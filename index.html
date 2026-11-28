@@ -1,21 +1,184 @@
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#080808" />
-    <meta name="description" content="Zstars Main — your space, your way." />
-    <meta name="application-name" content="Zstars" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Zstars" />
-    <link rel="canonical" href="https://zstars-main.vercel.app/" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" type="image/svg+xml" href="/icons/zstars-icon.svg" />
-    <title>Zstars Main</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#050505">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zstars">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/icons/zstars-icon.svg">
+<link rel="apple-touch-icon" href="/icons/zstars-icon.svg">
+<meta name="description" content="Zstars — ruang untuk berbagi, menemukan, dan terhubung.">
+<title>Zstars</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#050505;--fg:#f5f5f5;--muted:#929292;--line:#292929;--panel:#111;--radius:30px}
+*{box-sizing:border-box}
+html{background:var(--bg);scroll-behavior:auto;scroll-snap-type:y mandatory}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'DM Sans',sans-serif;user-select:none;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+a,button{-webkit-tap-highlight-color:transparent;color:inherit}a{text-decoration:none}button{font:inherit;cursor:pointer}
+::selection{background:#fff;color:#000}:focus-visible{outline:2px solid white;outline-offset:4px}
+.topbar{position:fixed;z-index:20;top:0;left:0;width:100%;height:78px;padding:0 clamp(22px,6vw,88px);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#050505ee,#05050500)}
+.brand{font:800 23px Manrope;letter-spacing:-1.4px}.brand span{color:#777}
+.top-note{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#888}
+.install-btn{border:1px solid #444;background:#111;color:#eee;border-radius:999px;padding:9px 14px;font-size:11px;font-weight:700;letter-spacing:.3px;transition:background .2s,border-color .2s}
+.install-btn:hover{background:#222;border-color:#888}
+.top-actions{display:flex;align-items:center;gap:16px}
+@media(max-width:760px){.top-actions{gap:9px}.install-btn{padding:8px 11px;font-size:10px}.top-note{display:none}}
+.screen{height:100svh;min-height:620px;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:flex;align-items:center;overflow:hidden;padding:100px clamp(24px,10vw,150px) 72px}
+.inner{width:min(1100px,100%);margin:auto}
+.eyebrow{display:flex;align-items:center;gap:10px;color:#999;font-size:11px;letter-spacing:2.4px;text-transform:uppercase;font-weight:700}
+.eyebrow:before{content:"";width:7px;height:7px;border-radius:50%;background:#fff}
+h1,h2,h3,p{margin-top:0}
+h1{font:800 clamp(64px,11vw,142px)/.91 Manrope;letter-spacing:-.085em;margin:30px 0;max-width:1000px}
+h1 span{color:#777}
+h2{font:800 clamp(42px,7vw,86px)/.98 Manrope;letter-spacing:-.075em;margin:18px 0}
+.sub{font-size:clamp(15px,1.6vw,19px);line-height:1.8;color:#aaa;max-width:590px}
+.actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:34px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:12px;border:1px solid #eee;background:#f5f5f5;color:#050505;padding:14px 23px;border-radius:999px;font-size:13px;font-weight:800;transition:transform .25s,background .25s}
+.btn:hover{transform:translateY(-3px);background:#dcdcdc}
+.btn.secondary{background:transparent;color:#eee;border-color:#444}.btn.secondary:hover{background:#191919}
+.hint{font-size:11px;color:#777;margin-top:28px;letter-spacing:.5px}
+.orbit{position:absolute;width:min(34vw,390px);aspect-ratio:1;border:1px solid #242424;border-radius:50%;right:7%;bottom:-8%;display:grid;place-items:center;color:#777;font:700 12px Manrope;letter-spacing:3px;transform:rotate(-18deg)}
+.orbit:before,.orbit:after{content:"";position:absolute;border:1px solid #242424;border-radius:50%;inset:12%}.orbit:after{inset:25%}
+.side-index{position:absolute;left:clamp(24px,4vw,58px);bottom:35px;color:#666;font:600 11px Manrope;letter-spacing:2px}
+.reveal{opacity:0;transform:translateY(26px)}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:42px}
+.person,.feature{border:1px solid #292929;background:linear-gradient(145deg,#151515,#0b0b0b);border-radius:26px;padding:25px;min-height:225px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .3s,border-color .3s,background .3s;position:relative;overflow:hidden}
+.person:hover,.feature:hover{transform:translateY(-5px);border-color:#777;background:#191919}
+.avatar{width:64px;height:64px;border:1px solid #555;border-radius:22px;overflow:hidden;background:#181818;flex:none}.avatar img{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
+.meta{font-size:10px;color:#777;letter-spacing:1.8px;text-transform:uppercase}
+.person h3,.feature h3{font:750 21px Manrope;letter-spacing:-.8px;margin:10px 0 5px}.person .role{display:inline-flex;align-items:center;gap:7px;color:#ddd;font-size:11px;letter-spacing:.5px}.person .role:before{content:'';width:5px;height:5px;border-radius:50%;background:#eee}
+.person p,.feature p{font-size:13px;line-height:1.65;color:#999;margin:0;max-width:270px}
+.feature .number{font:700 12px Manrope;color:#777}
+.feature-icon{font:500 34px Manrope;color:#ddd}
+.contact-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-top:34px}
+.contact-panel{border:1px solid #292929;background:#101010;border-radius:var(--radius);padding:26px}
+.contact-panel h3{font:700 20px Manrope;margin:0 0 8px}
+.contact-panel p{font-size:13px;color:#999;line-height:1.7;margin:0}
+.contact-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid #292929;font-size:13px;color:#aaa}
+.contact-row:last-child{border:0}.contact-row span:last-child{color:#666}
+.login-panel{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:14px;padding:22px 26px;border-radius:var(--radius);background:#f1f1f1;color:#050505}
+.login-panel strong{font:800 clamp(20px,3vw,30px) Manrope;letter-spacing:-1px}.login-panel small{display:block;color:#555;margin-top:4px;font-size:12px}
+.login-panel .btn{background:#050505;color:#fff;border-color:#050505;white-space:nowrap}
+.toast{position:fixed;z-index:50;bottom:28px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#f4f4f4;color:#050505;padding:13px 19px;border-radius:999px;font-size:12px;font-weight:700;transition:opacity .25s,transform .25s;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:760px){
+ .topbar{height:66px;padding:0 20px}.top-note{font-size:9px;letter-spacing:1px}
+ .screen{min-height:600px;padding:90px 25px 65px}
+ h1{font-size:clamp(58px,15vw,92px)}h2{font-size:clamp(43px,11vw,66px)}
+ .grid{grid-template-columns:1fr;gap:9px;margin-top:24px}
+ .person,.feature{min-height:0;padding:16px 18px;display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:center}
+ .person .meta,.feature .number{grid-column:1/-1}
+ .person .avatar,.feature .feature-icon{grid-row:2;grid-column:1}
+ .person div:last-child,.feature div:last-child{grid-row:2;grid-column:2}
+ .person h3,.feature h3{font-size:17px;margin:0 0 3px}.person p,.feature p{font-size:11px}
+ .contact-grid{grid-template-columns:1fr;gap:9px;margin-top:20px}
+ .contact-panel{padding:17px 19px}.contact-panel h3{font-size:17px}
+ .contact-row{padding:9px 0;font-size:11px}
+ .login-panel{padding:17px;gap:10px}.login-panel strong{font-size:19px}.login-panel small{font-size:10px}.login-panel .btn{padding:12px 14px;font-size:11px}
+ .side-index{bottom:19px}
+}
+@media(max-height:700px) and (min-width:761px){.screen{padding-top:80px;padding-bottom:55px}.grid{margin-top:24px}.person,.feature{min-height:185px}.contact-grid{margin-top:20px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+
+html:has(body.landing-mode){height:auto!important;min-height:100%;overflow-x:hidden!important;overflow-y:auto!important;scroll-snap-type:y mandatory}
+body.landing-mode{position:static!important;inset:auto!important;height:auto!important;min-height:100%;overflow-x:hidden!important;overflow-y:auto!important}
+body.landing-mode #root[hidden]{display:none!important}
+#landing[hidden]{display:none!important}
+</style>
+</head>
+<body class="landing-mode">
+<div id="landing">
+<header class="topbar"><a class="brand" href="#welcome">Zstars<span>.</span></a><div class="top-actions"><span class="top-note">A space to belong</span><button class="install-btn" id="install-app" type="button">Install app ↧</button></div></header>
+<main>
+<section class="screen" id="welcome">
+<div class="inner">
+<div class="eyebrow hero-in">Welcome to Zstars</div>
+<h1 class="hero-in">Find your space.<br><span>Find your people.</span></h1>
+<p class="sub hero-in">Sebuah ruang untuk berbagi cerita, menemukan hal baru, dan terhubung dengan orang-orang yang punya minat serupa.</p>
+<div class="actions hero-in"><button class="btn" data-next="1">Explore Zstars <span>↗</span></button><span class="hint" style="margin:0">SCROLL TO DISCOVER ↓</span></div>
+</div>
+<span class="side-index">01 / 04</span>
+</section>
+<section class="screen" id="contributors">
+<div class="inner">
+<div class="eyebrow reveal">The people behind it</div>
+<h2 class="reveal">Made by people.<br><span style="color:#777">For people.</span></h2>
+<p class="sub reveal">Satu orang di balik banyak peran. Semua arah, pengembangan, dan pengalaman Zstars dibangun dari satu tempat.</p>
+<div class="grid">
+<article class="person reveal"><span class="meta">01 / THE FOUNDER</span><div class="avatar"><img class="profile-avatar" src="/icons/zstars-icon.svg" alt="Foto profil Zeroo"></div><div><h3>Zeroo</h3><span class="role">Founder & direction</span></div></article>
+<article class="person reveal"><span class="meta">02 / THE BUILDER</span><div class="avatar"><img class="profile-avatar" src="/avatar.jpg" alt="Foto profil Zeroo"></div><div><h3>Zeroo</h3><span class="role">Development & engineering</span></div></article>
+<article class="person reveal"><span class="meta">03 / THE CREATIVE</span><div class="avatar"><img class="profile-avatar" src="/avatar.jpg" alt="Foto profil Zeroo"></div><div><h3>Zeroo</h3><span class="role">Design & experience</span></div></article>
+</div>
+</div><span class="side-index">02 / 04</span>
+</section>
+<section class="screen" id="features">
+<div class="inner">
+<div class="eyebrow reveal">What you can do</div>
+<h2 class="reveal">One platform.<br><span style="color:#777">More ways to connect.</span></h2>
+<p class="sub reveal">Zstars dirancang untuk jadi tempat komunitas tumbuh, berbagi, dan saling menemukan.</p>
+<div class="grid">
+<article class="feature reveal"><span class="number">01 / SHARE</span><span class="feature-icon" aria-hidden="true">↗</span><div><h3>Share your thoughts</h3><p>Bagikan cerita, ide, dan mulai percakapan.</p></div></article>
+<article class="feature reveal"><span class="number">02 / DISCOVER</span><span class="feature-icon" aria-hidden="true">⌕</span><div><h3>Discover interests</h3><p>Temukan topik dan komunitas baru.</p></div></article>
+<article class="feature reveal"><span class="number">03 / CONNECT</span><span class="feature-icon" aria-hidden="true">◎</span><div><h3>Connect with people</h3><p>Terhubung dengan orang yang satu minat.</p></div></article>
+</div>
+</div><span class="side-index">03 / 04</span>
+</section>
+<section class="screen" id="contact">
+<div class="inner">
+<div class="eyebrow reveal">Say hello</div>
+<h2 class="reveal">Let's build<br><span style="color:#777">something together.</span></h2>
+<p class="sub reveal">Punya pertanyaan atau ingin mengenal contributor lebih dekat? Detail kontak akan ditambahkan setelah informasinya siap.</p>
+<div class="contact-grid reveal">
+<div class="contact-panel"><h3>Contact contributors</h3><p>Informasi kontak resmi contributor akan ditampilkan di sini.</p></div>
+<div class="contact-panel"><div class="contact-row"><span>General inquiries</span><span>Coming soon</span></div><div class="contact-row"><span>Collaboration</span><span>Coming soon</span></div><div class="contact-row"><span>Community</span><span>Coming soon</span></div></div>
+</div>
+<div class="login-panel reveal"><div><strong>Ready to enter Zstars?</strong><small>Pilih metode masuk untuk mulai menggunakan Zstars.</small></div><button class="btn" id="login-demo">Enter Zstars ↗</button></div>
+</div><span class="side-index">04 / 04</span>
+</section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite">Website utama Zstars belum tersedia. Link login akan ditambahkan nanti.</div>
+<div id="root" hidden></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.11/dist/lenis.min.js"></script>
+<script type="module">
+import { animate } from 'https://cdn.jsdelivr.net/npm/motion@12.23.24/+esm';
+const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const screens=[...document.querySelectorAll('.screen')];
+
+
+const toast=document.getElementById('toast');let toastTimer;
+function showToast(message){toast.textContent=message;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2800)}
+function goTo(index){const target=screens[Math.max(0,Math.min(screens.length-1,index))];if(window.zstarsLenis)window.zstarsLenis.scrollTo(target,{duration:reduceMotion?0:.85,lock:true});else target.scrollIntoView({behavior:reduceMotion?'auto':'smooth'})}
+
+document.querySelectorAll('[data-next]').forEach(button=>button.addEventListener('click',()=>goTo(Number(button.dataset.next))));
+document.getElementById('login-demo').addEventListener('click',()=>{document.getElementById('landing').hidden=true;document.body.classList.remove('landing-mode');document.getElementById('root').hidden=false;window.scrollTo(0,0);});
+let deferredInstallPrompt=null;
+const installButton=document.getElementById('install-app');
+window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstallPrompt=event;installButton.textContent='Install app ↧';});
+window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;installButton.textContent='Installed ✓';installButton.disabled=true;showToast('Zstars berhasil dipasang di perangkat ini.');});
+installButton.addEventListener('click',async()=>{if(deferredInstallPrompt){deferredInstallPrompt.prompt();const choice=await deferredInstallPrompt.userChoice; if(choice.outcome==='accepted')showToast('Zstars sedang dipasang.');deferredInstallPrompt=null;return;}showToast('Di Chrome: buka menu ⋮ lalu pilih Install app atau Add to Home screen.');});
+const revealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{if(!entry.isIntersecting)return;const el=entry.target;revealObserver.unobserve(el);if(reduceMotion){el.style.opacity='1';el.style.transform='none';return;}animate(el,{opacity:[0,1],transform:['translateY(26px)','translateY(0px)']},{duration:.72,easing:[.22,.8,.2,1]});}),{threshold:.12,rootMargin:'0px 0px -36px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
+if(!reduceMotion){
+ const lenis=new Lenis({lerp:.11,smoothWheel:true,wheelMultiplier:1});
+ window.zstarsLenis=lenis;
+ if(window.gsap&&window.ScrollTrigger){gsap.registerPlugin(ScrollTrigger);lenis.on('scroll',ScrollTrigger.update);gsap.ticker.add(t=>lenis.raf(t*1000));gsap.ticker.lagSmoothing(0);
+ }
+ // Snap each completed wheel/touch scroll to the nearest full-screen section.
+ let snapTimer;
+ lenis.on('scroll',({scroll})=>{clearTimeout(snapTimer);snapTimer=setTimeout(()=>{const nearest=screens.reduce((best,el)=>Math.abs(el.offsetTop-scroll)<Math.abs(best.offsetTop-scroll)?el:best,screens[0]);if(Math.abs(nearest.offsetTop-scroll)>3)lenis.scrollTo(nearest,{duration:.65,lock:true})},170)});
+}
+</script>
+<script>if("serviceWorker" in navigator && location.protocol==="https:"){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}</script>
+</body>
 </html>
