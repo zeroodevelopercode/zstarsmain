@@ -53,7 +53,7 @@ export default function GmailPage({ onBack, onVerified }) {
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.message || 'Kode salah atau sudah kedaluwarsa.')
-      onVerified?.(data.email || email.trim())
+      onVerified?.(data.email || email.trim(), data.sessionToken)
     } catch (error) {
       setMessage(error.message || 'Verifikasi gagal. Coba lagi.')
     } finally {
