@@ -184,7 +184,7 @@ if ($method === 'GET' && $path === '/health') {
     }
 }
 
-if ($origin === '' || $allowedOrigin === '' || !hash_equals($allowedOrigin, $origin)) {
+if (!$originAllowed) {
     respond(403, ['ok' => false, 'message' => 'Origin tidak diizinkan.']);
 }
 
