@@ -87,7 +87,7 @@ h2{font:800 clamp(42px,7vw,86px)/.98 Manrope;letter-spacing:-.075em;margin:18px 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
 
 html:has(body.landing-mode){height:auto!important;min-height:100%;overflow-x:hidden!important;overflow-y:auto!important;scroll-snap-type:y mandatory}
-body.landing-mode{position:static!important;inset:auto!important;height:auto!important;min-height:100%;overflow-x:hidden!important;overflow-y:auto!important}
+body.landing-mode{position:static!important;inset:auto!important;height:auto!important;min-height:100%;overflow:visible!important}
 body.landing-mode #root[hidden]{display:none!important}
 #landing[hidden]{display:none!important}
 </style>
@@ -146,32 +146,31 @@ body.landing-mode #root[hidden]{display:none!important}
 </div>
 <div id="root" hidden></div>
 <script type="module" src="/src/main.jsx"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.11/dist/lenis.min.js"></script>
-<script type="module">
-import { animate } from 'https://cdn.jsdelivr.net/npm/motion@12.23.24/+esm';
+<script>
 const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const screens=[...document.querySelectorAll('.screen')];
-
-
-const toast=document.getElementById('toast');let toastTimer;
-function showToast(message){toast.textContent=message;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2800)}
-function goTo(index){const target=screens[Math.max(0,Math.min(screens.length-1,index))];if(window.zstarsLenis)window.zstarsLenis.scrollTo(target,{duration:reduceMotion?0:.85,lock:true});else target.scrollIntoView({behavior:reduceMotion?'auto':'smooth'})}
-
-document.querySelectorAll('[data-next]').forEach(button=>button.addEventListener('click',()=>goTo(Number(button.dataset.next))));
-document.getElementById('login-demo').addEventListener('click',()=>{document.getElementById('landing').hidden=true;document.body.classList.remove('landing-mode');document.getElementById('root').hidden=false;window.scrollTo(0,0);});
-const revealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{if(!entry.isIntersecting)return;const el=entry.target;revealObserver.unobserve(el);if(reduceMotion){el.style.opacity='1';el.style.transform='none';return;}animate(el,{opacity:[0,1],transform:['translateY(26px)','translateY(0px)']},{duration:.72,easing:[.22,.8,.2,1]});}),{threshold:.12,rootMargin:'0px 0px -36px 0px'});
-document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
-if(!reduceMotion){
- const lenis=new Lenis({lerp:.11,smoothWheel:true,wheelMultiplier:1});
- window.zstarsLenis=lenis;
- if(window.gsap&&window.ScrollTrigger){gsap.registerPlugin(ScrollTrigger);lenis.on('scroll',ScrollTrigger.update);gsap.ticker.add(t=>lenis.raf(t*1000));gsap.ticker.lagSmoothing(0);
- }
- // Snap each completed wheel/touch scroll to the nearest full-screen section.
- let snapTimer;
- lenis.on('scroll',({scroll})=>{clearTimeout(snapTimer);snapTimer=setTimeout(()=>{const nearest=screens.reduce((best,el)=>Math.abs(el.offsetTop-scroll)<Math.abs(best.offsetTop-scroll)?el:best,screens[0]);if(Math.abs(nearest.offsetTop-scroll)>3)lenis.scrollTo(nearest,{duration:.65,lock:true})},170)});
+function goTo(index){
+  const target=screens[Math.max(0,Math.min(screens.length-1,index))];
+  target.scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'});
 }
+document.querySelectorAll('[data-next]').forEach(button=>button.addEventListener('click',()=>goTo(Number(button.dataset.next))));
+document.getElementById('login-demo').addEventListener('click',()=>{
+  document.getElementById('landing').hidden=true;
+  document.body.classList.remove('landing-mode');
+  document.getElementById('root').hidden=false;
+  window.scrollTo({top:0,behavior:'auto'});
+});
+const revealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
+  if(!entry.isIntersecting)return;
+  const el=entry.target;
+  revealObserver.unobserve(el);
+  if(reduceMotion){el.style.opacity='1';el.style.transform='none';return;}
+  el.animate(
+    [{opacity:0,transform:'translateY(26px)'},{opacity:1,transform:'translateY(0px)'}],
+    {duration:720,easing:'cubic-bezier(.22,.8,.2,1)',fill:'both'}
+  );
+}),{threshold:.12,rootMargin:'0px 0px -36px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
 </script>
 <script>if("serviceWorker" in navigator && location.protocol==="https:"){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}</script>
 </body>
