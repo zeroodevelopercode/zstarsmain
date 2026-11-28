@@ -1,0 +1,35 @@
+{
+  "id": "https://zstars-main.vercel.app/",
+  "name": "Zstars Main",
+  "short_name": "Zstars",
+  "description": "Zstars — your space, your way.",
+  "start_url": "https://zstars-main.vercel.app/",
+  "scope": "https://zstars-main.vercel.app/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "theme_color": "#080808",
+  "background_color": "#080808",
+  "categories": [
+    "social",
+    "productivity"
+  ],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/icons/zstars-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/zstars-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
