@@ -160,7 +160,7 @@ if ($originAllowed) {
     header('Access-Control-Allow-Origin: ' . $origin);
     header('Vary: Origin');
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization');
     header('Access-Control-Max-Age: 600');
 }
 
@@ -188,7 +188,32 @@ if (!$originAllowed) {
     respond(403, ['ok' => false, 'message' => 'Origin tidak diizinkan.']);
 }
 
-if ($method !== 'POST' || !in_array($path, ['/auth/send-otp', '/auth/verify-otp'], true)) {
+if (($method === 'GET' && $path === '/auth/session') || ($method === 'POST' && $path === '/auth/logout')) {
+    try {
+        ensureConfig();
+        $authorization = trim($_SERVER['HTTP_AUTHORIZATION'] ?? '');
+        if (!preg_match('/^Bearer ([a-f0-9]{64})$/D', $authorization, $matches)) {
+            respond(401, ['ok' => false, 'message' => 'Sesi tidak valid.']);
+        }
+        $sessionHash = hash_hmac('sha256', $matches[1], envValue('OTP_PEPPER'));
+        $pdo = database();
+        if ($method === 'POST') {
+            $revoke = $pdo->prepare('UPDATE auth_sessions SET revoked_at = NOW() WHERE token_hash = :token AND revoked_at IS NULL');
+            $revoke->execute(['token' => $sessionHash]);
+            respond(200, ['ok' => true]);
+        }
+        $lookup = $pdo->prepare('SELECT email, expires_at FROM auth_sessions WHERE token_hash = :token AND revoked_at IS NULL AND expires_at > NOW()');
+        $lookup->execute(['token' => $sessionHash]);
+        $session = $lookup->fetch();
+        if (!$session) respond(401, ['ok' => false, 'message' => 'Sesi sudah berakhir. Silakan login kembali.']);
+        respond(200, ['ok' => true, 'email' => $session['email'], 'expiresAt' => $session['expires_at']]);
+    } catch (Throwable $error) {
+        error_log('Zstars session API internal error.');
+        respond(500, ['ok' => false, 'message' => 'Tidak dapat memeriksa sesi.']);
+    }
+}
+
+if ($method !== 'POST' || !in_array($path, ['/auth/send-otp', '/auth/verify-otp', '/auth/logout'], true)) {
     respond(404, ['ok' => false, 'message' => 'Endpoint tidak ditemukan.']);
 }
 
@@ -291,9 +316,22 @@ try {
 
     $consume = $pdo->prepare('UPDATE otp_challenges SET consumed_at = NOW() WHERE id = :id AND consumed_at IS NULL');
     $consume->execute(['id' => $challenge['id']]);
+
+    $sessionToken = bin2hex(random_bytes(32));
+    $sessionHash = hash_hmac('sha256', $sessionToken, $pepper);
+    $createSession = $pdo->prepare(
+        'INSERT INTO auth_sessions (token_hash, email, expires_at) VALUES (:token, :email, NOW() + INTERVAL \'30 days\')'
+    );
+    $createSession->execute(['token' => $sessionHash, 'email' => $challenge['email']]);
     $pdo->commit();
 
-    respond(200, ['ok' => true, 'verified' => true, 'email' => $challenge['email']]);
+    respond(200, [
+        'ok' => true,
+        'verified' => true,
+        'email' => $challenge['email'],
+        'sessionToken' => $sessionToken,
+        'expiresIn' => 2592000,
+    ]);
 } catch (Throwable $error) {
     if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) $pdo->rollBack();
     error_log('Zstars auth API internal error.');
